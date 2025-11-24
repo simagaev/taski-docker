@@ -7,8 +7,8 @@ on:
       - main
 
 jobs:
-  # Job 1: Тестирование (CI часть)
-  tests:
+  # Job 1: Тестирование бэкенда (CI часть)
+  backend_tests:
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -44,10 +44,29 @@ jobs:
         cd backend/
         python manage.py test
 
-  # Job 2: Сборка и загрузка образов (CD часть)
+  # Job 2: Тестирование фронтенда (CI часть)
+  frontend_tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up nodeJS
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+    - name: Install dependencies
+      run: |
+        cd frontend/
+        npm ci
+    - name: Test frontend
+      run: |
+        cd frontend/
+        npm run test
+
+  # Job 3: Сборка и загрузка ВСЕХ образов (CD часть)
   build_and_push_to_docker_hub:
     runs-on: ubuntu-latest
-    needs: tests
+    # Ждём завершения ОБОИХ тестов!
+    needs: [backend_tests, frontend_tests]
     
     steps:
       - name: Check out the repo
