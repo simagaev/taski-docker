@@ -118,7 +118,7 @@ jobs:
           source: "docker-compose.production.yml"
           target: "taski"
       
-      # Выполняем команды на сервере для деплоя
+      # Выполняем команды на сервере для деплоя Run 1
       - name: Executing remote ssh commands to deploy
         uses: appleboy/ssh-action@v0.1.8
         with:
