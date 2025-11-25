@@ -97,29 +97,17 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/taski_gateway:latest
 
-  # Job 4: Деплой на боевой сервер
+  # Job 4: УПРОЩЁННЫЙ Деплой для теста SSH
   deploy:
     runs-on: ubuntu-latest
-    # Ждём только job с билдом образов
     needs: build_and_push_to_docker_hub
     
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
       
-      # Копируем docker-compose.production.yml на продакшен-сервер
-      - name: Copy docker-compose.yml via ssh
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USER }}
-          key: ${{ secrets.SSH_KEY }}
-          passphrase: ${{ secrets.SSH_PASSPHRASE }}
-          source: "docker-compose.production.yml"
-          target: "taski"
-      
-      # Выполняем команды на сервере для деплоя Run 1
-      - name: Executing remote ssh commands to deploy
+      # ПРОСТОЙ ТЕСТ: проверяем только SSH подключение
+      - name: Test basic SSH connection
         uses: appleboy/ssh-action@v0.1.8
         with:
           host: ${{ secrets.HOST }}
@@ -127,16 +115,8 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           script: |
-            cd taski
-            # Скачиваем обновлённые образы с Docker Hub
-            sudo docker compose -f docker-compose.production.yml pull
-            # Останавливаем старые контейнеры
-            sudo docker compose -f docker-compose.production.yml down
-            # Запускаем новые контейнеры
-            sudo docker compose -f docker-compose.production.yml up -d
-            # Выполняем миграции
-            sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
-            # Собираем статику
-            sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic --noinput
-            # Копируем статику в нужную папку
-            sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/collected_static/. /backend_static/static/
+            echo "✅ SUCCESS: Connected to server!"
+            echo "User: $(whoami)"
+            echo "Directory: $(pwd)"
+            echo "Files:"
+            ls -la
