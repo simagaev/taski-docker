@@ -107,6 +107,14 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
       
+      # ← ДОБАВЬ ЭТОТ ШАГ! Исправляем образы в docker-compose
+      - name: Prepare docker-compose with correct images
+        run: |
+          # Заменяем DOCKER_USERNAME на реальный username
+          sed -i "s/DOCKER_USERNAME/${{ secrets.DOCKER_USERNAME }}/g" docker-compose.production.yml
+          echo "✅ Updated docker-compose.production.yml with correct images"
+          cat docker-compose.production.yml
+      
       # Копируем docker-compose.production.yml на продакшен-сервер
       - name: Copy docker-compose.yml via ssh
         uses: appleboy/scp-action@v0.1.7
@@ -118,7 +126,7 @@ jobs:
           source: "docker-compose.production.yml"
           target: "taski"
       
-      # Выполняем команды на сервере для деплоя Run 1
+      # Выполняем команды на сервере для деплоя
       - name: Executing remote ssh commands to deploy
         uses: appleboy/ssh-action@v0.1.8
         with:
